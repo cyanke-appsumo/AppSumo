@@ -1,49 +1,4 @@
- weekday at 5pm CT. You can also trigger it manually from the GitHub UI anytime.
-To set this up:
 
-Create a GitHub repo and add both files (digest.py at the root, .github/workflows/daily-digest.yml for the workflow).
-Add your Anthropic API key as a GitHub secret: go to your repo → Settings → Secrets → New secret → name it ANTHROPIC_API_KEY.
-Connect your HubSpot and Slack integrations to your Anthropic account at console.anthropic.com — this is what allows Claude to make the same tool calls it made in this conversation.
-Push to GitHub and the schedule kicks in automatically. You can also hit "Run workflow" manually to test it.
-One important note: The tool integrations (HubSpot + Slack) need to be configured at the API level in your Anthropic account. This is currently available via Anthropic's connector/integration settings — want help thinking through that step, or any other part of the setup?
-
-how do I add files to my repo?
-
-10:35 AM
-Here are a few ways to do it, depending on your comfort level:
-
-Option 1 — GitHub web UI (easiest, no setup needed)
-
-Go to your repo on github.com
-Click Add file → Create new file
-Name the file (e.g. digest.py), paste in the code, and click Commit changes
-Repeat for the workflow file — but for that one, you need to type the full path in the filename field: .github/workflows/daily-digest.yml (GitHub will automatically create the folders)
-Option 2 — GitHub Desktop (good if you prefer a visual app)
-
-Download GitHub Desktop
-Clone your repo locally
-Add the files to the folder on your computer
-In GitHub Desktop, write a commit message and click Commit → Push
-Option 3 — Git CLI (most control)
-
-bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
-# add your files here, then:
-git add .
-git commit -m "Add daily digest automation"
-git push
-For your situation, Option 1 is probably the quickest since you only have two files. Do you have a GitHub repo already created, or do you need help setting that up first?
-
-
-
-Want to be notified when Claude responds?
-
-
-
-Claude is AI and can make mistakes. Please double-check responses.
-# .github/workflows/daily-digest.yml
-#
 # Runs the deal digest every weekday at 5pm CT (11pm UTC).
 # Adjust the cron schedule as needed:
 #   https://crontab.guru
