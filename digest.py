@@ -1,0 +1,34 @@
+
+# .github/workflows/daily-digest.yml
+#
+# Runs the deal digest every weekday at 5pm CT (11pm UTC).
+# Adjust the cron schedule as needed:
+#   https://crontab.guru
+
+name: Daily Deal Digest
+
+on:
+  schedule:
+    - cron: "0 23 * * 1-5"   # Mon–Fri at 11pm UTC (5pm CT)
+  workflow_dispatch:          # Also allows manual runs from GitHub UI
+
+jobs:
+  run-digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install anthropic
+
+      - name: Run daily digest
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python digest.py
