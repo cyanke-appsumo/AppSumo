@@ -1,32 +1,75 @@
+import anthropic
+import datetime
+import sys
 
-# Runs the deal digest every weekday at 5pm CT (11pm UTC).
-# Adjust the cron schedule as needed:
-#   https://crontab.guru
+ANTHROPIC_API_KEY = "YOUR_ANTHROPIC_API_KEY"
+MODEL = "claude-sonnet-4-6"
 
-name: Daily Deal Digest
+SYSTEM_PROMPT = """You are an automation agent with access to HubSpot and Slack tools.
+When asked, you will:
+1. Query HubSpot for all deals created today (use today's date in UTC).
+2. For each deal, find the associated company and retrieve its Lead Score property.
+3. Post a formatted digest to the Slack #bd channel (channel ID: G01C1A14J9W).
 
-on:
-  schedule:
-    - cron: "0 23 * * 1-5"   # Mon–Fri at 11pm UTC (5pm CT)
-  workflow_dispatch:          # Also allows manual runs from GitHub UI
+Format the Slack message exactly like this:
+📊 *Daily Deal Digest — {date}*
 
-jobs:
-  run-digest:
-    runs-on: ubuntu-latest
+*New Deals Created Today: {count}*
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+🥇 *Tier 1*
+• [list Tier 1 companies]
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+*Tier 2*
+• [list Tier 2 companies]
 
-      - name: Install dependencies
-        run: pip install anthropic
+*No Score*
+• [list companies with no lead score]
 
-      - name: Run daily digest
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python digest.py
+If there are no deals today, post a message saying so.
+Always complete the full workflow without asking for confirmation."""
+
+USER_PROMPT = "Run the daily deal digest for today and post it to #bd."
+
+
+def run_digest():
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    today = datetime.date.today().strftime("%B %d, %Y")
+    print(f"[{today}] Starting daily deal digest...")
+
+    messages = [{"role": "user", "content": USER_PROMPT}]
+
+    while True:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=4096,
+            system=SYSTEM_PROMPT,
+            messages=messages,
+        )
+
+        messages.append({"role": "assistant", "content": response.content})
+
+        if response.stop_reason == "end_turn":
+            print("Done.")
+            for block in response.content:
+                if hasattr(block, "text"):
+                    print(block.text)
+            break
+
+        if response.stop_reason == "tool_use":
+            tool_results = []
+            for block in response.content:
+                if block.type == "tool_use":
+                    print(f"  Tool call: {block.name}")
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": "Tool executed via integration.",
+                    })
+            messages.append({"role": "user", "content": tool_results})
+        else:
+            print(f"Unexpected stop reason: {response.stop_reason}", file=sys.stderr)
+            break
+
+
+if __name__ == "__main__":
+    run_digest()
