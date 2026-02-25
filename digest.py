@@ -1,16 +1,10 @@
 
-# .github/workflows/daily-digest.yml
-#
-# Runs the deal digest every weekday at 5pm CT (11pm UTC).
-# Adjust the cron schedule as needed:
-#   https://crontab.guru
-
 name: Daily Deal Digest
 
 on:
   schedule:
-    - cron: "0 23 * * 1-5"   # Mon–Fri at 11pm UTC (5pm CT)
-  workflow_dispatch:          # Also allows manual runs from GitHub UI
+    - cron: "0 23 * * 1-5"
+  workflow_dispatch:
 
 jobs:
   run-digest:
